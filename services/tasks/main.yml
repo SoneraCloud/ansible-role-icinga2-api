@@ -1,0 +1,44 @@
+---
+- name: creating the icinga2 service object(s)
+  uri:
+    user: "{{ icinga2_api_user }}"
+    password: "{{ icinga2_api_pass }}"
+    url: "https://{{ icinga2_hostname }}:5665/v1/objects/services/{{ item.host }}!{{ item.name }}"
+    method: "{{ icinga2_api_method | default('PUT') }}"
+    HEADER_Accept: "application/json"
+    body: "{{ item.info }}"
+    body_format: json
+    validate_certs: no
+    return_content: yes
+    status_code: ["200", "503"]
+  register: _icinga2_services
+  changed_when: "_icinga2_services.status == 200"
+  failed_when:
+    - _icinga2_services.json.results[0].errors is defined
+    - "not ( _icinga2_services.json.results[0].errors[0] | search('already exists.') )"
+  with_items:
+    - "{{ icinga2_service | default(omit) }}"
+    - "{{ icinga2_services| default(omit)  }}"
+  tags: icinga2_api_services
+
+- name: updating the icinga2 service object(s)
+  uri:
+    user: "{{ icinga2_api_user }}"
+    password: "{{ icinga2_api_pass }}"
+    url: "https://{{ icinga2_hostname }}:5665/v1/objects/services/{{ item.host }}!{{ item.name }}"
+    method: POST # Update
+    HEADER_Accept: "application/json"
+    body: "{{ item.info }}"
+    body_format: json
+    validate_certs: no
+    return_content: yes
+    status_code: ["200", "503"]
+  register: _icinga2_services_update
+  changed_when: "_icinga2_services_update.status == 200"
+  with_items:
+    - "{{ icinga2_service | default(omit) }}"
+    - "{{ icinga2_services| default(omit)  }}"
+  when:
+    - _icinga2_services.json.results[0].errors is defined
+    #- _icinga2_services.json.results[0].errors[0] | search('already exists.')
+  tags: icinga2_api_services

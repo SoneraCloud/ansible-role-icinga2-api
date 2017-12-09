@@ -1,0 +1,4 @@
+---
+config_dict:
+  files: "{{ config_files }}"
+...

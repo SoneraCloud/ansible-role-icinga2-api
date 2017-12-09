@@ -1,0 +1,7 @@
+---
+- include: hostgroups.yml
+- include: static_hosts.yml
+- include: servicegroups.yml
+- include: services.yml
+- include: users.yml
+...
